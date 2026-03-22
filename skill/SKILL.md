@@ -78,24 +78,28 @@ Report to the user like:
 
 Agents work at their desks where the user can watch them. Best for independent tasks.
 
+Uses `tee` to pipe output to both the tmux pane (visual) AND a work log file (persistent). This way the user watches live, and Claude Code reads the full log after to understand what the agent actually did — not just the file changes, but their reasoning, errors, and warnings.
+
 ```bash
 TASK_ID=$(date +%s)
 
-# Deploy one agent
-tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO_DIR' - ; echo \$? > /tmp/report-$TASK_ID"
+# Deploy one agent — visual + logged
+tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-$TASK_ID.txt ; echo \${PIPESTATUS[0]} > /tmp/report-$TASK_ID"
 
-# Deploy a whole crew
-tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO_DIR' - ; echo \$? > /tmp/report-task1"
-tmux split-window -v "cat /tmp/assignment-2.txt | codex exec --full-auto -C '$REPO_DIR' - ; echo \$? > /tmp/report-task2"
+# Deploy a whole crew — each gets their own work log
+tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-task1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-task1"
+tmux split-window -v "cat /tmp/assignment-2.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-task2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-task2"
 ```
 
 Tell the user: "Agents are at their desks. You can watch them work in the panes."
 
 **Rules for the crew:**
 - Write assignments to temp files and pipe via stdin (`-`) — no garbled orders
+- Always use `2>&1 | tee /tmp/worklog-<id>.txt` — keeps a paper trail even after panes close
+- Use `${PIPESTATUS[0]}` instead of `$?` to capture the agent's exit code, not `tee`'s
 - Do NOT append `; read` — when they're done, they clock out
 - Every assignment starts with the preamble (see below) — no slacking, no questions
-- Every dispatch ends with a report file (` ; echo $? > /tmp/report-<id>`) — proof of completion
+- Every dispatch ends with a report file — proof of completion
 
 ### Mode 2: In the Back Room (background process — no tmux fallback)
 
@@ -200,20 +204,23 @@ fi
 **Inspection checklist — after each agent reports back:**
 
 1. Check the report (`0` = clean work, anything else = problems)
-2. Inspect the deliverables: `git diff` or `git diff --stat`
-3. Run quality checks (type-check, lint, tests)
-4. If the work is sloppy — write a correction assignment, send them back
-5. If the work is clean — sign off and clean up temp files
+2. **Read the work log first** — `cat /tmp/worklog-<id>.txt` to understand what the agent actually did, any errors it hit, and its reasoning. This is richer than just looking at file changes.
+3. Inspect the deliverables: `git diff` or `git diff --stat`
+4. Run quality checks (type-check, lint, tests)
+5. If the work is sloppy — write a correction assignment, send them back. Use specifics from the work log to explain what went wrong.
+6. If the work is clean — sign off and clean up temp files
+
+The work log is your primary intelligence. It tells you:
+- What files the agent touched and why
+- Any errors or warnings during execution
+- Whether the agent struggled or went smoothly
+- The agent's reasoning and approach
+- Whether they followed the boundaries or went rogue
 
 Tell the user:
-- Clean work: "Agent delivered. Work passes inspection."
-- Sloppy work: "Agent's work has issues. Sending them back with corrections."
+- Clean work: "Agent delivered. Read their work log — clean execution, no issues."
+- Sloppy work: "Agent's work log shows they struggled with X. Sending them back with corrections."
 - MIA: "Agent went dark. Might need to reassign this."
-
-For tmux, grab their final output:
-```bash
-tmux capture-pane -t <pane_id> -p  # read what they left on their desk
-```
 
 **Cleanup after sign-off:**
 ```bash
@@ -235,15 +242,18 @@ rm -f /tmp/assignment-*.txt /tmp/report-* /tmp/worklog-*
 
 ```bash
 # Two desks side-by-side
-tmux split-window -h "agent exec ..."
+tmux split-window -h "cat /tmp/assignment-1.txt | agent exec ... - 2>&1 | tee /tmp/worklog-1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-1"
 
 # Four desks (2x2 grid)
-tmux split-window -h "agent exec ..."
-tmux split-window -v "agent exec ..."
+tmux split-window -h "cat /tmp/a1.txt | agent ... 2>&1 | tee /tmp/worklog-1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-1"
+tmux split-window -v "cat /tmp/a2.txt | agent ... 2>&1 | tee /tmp/worklog-2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-2"
 tmux select-pane -t 0
-tmux split-window -v "agent exec ..."
+tmux split-window -v "cat /tmp/a3.txt | agent ... 2>&1 | tee /tmp/worklog-3.txt ; echo \${PIPESTATUS[0]} > /tmp/report-3"
 
-# Check what an agent left on their desk
+# Read an agent's full work log after they clock out (primary intelligence source)
+cat /tmp/worklog-1.txt
+
+# Peek at a pane while agent is still working (if pane hasn't closed yet)
 tmux capture-pane -t 1 -p
 ```
 
