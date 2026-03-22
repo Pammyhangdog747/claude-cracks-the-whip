@@ -55,8 +55,9 @@ All work signed off. Ready for your review.
 
 - **Roll call** — auto-detects which agents are available (CLI tools, MCP servers)
 - **3 work modes**: at their desk (tmux), in the back room (background), phone it in (MCP)
-- **Completion tracking** via report files — Claude knows when agents clock out
-- **Inspection loop** — reviews diffs, runs quality checks, sends sloppy work back
+- **Instant notifications** via `tmux wait-for` — agents tap the boss on the shoulder when done (polling fallback for non-tmux)
+- **Work logs** via `tee` — Claude reads the agent's full output for smarter reviews, not just `git diff`
+- **Inspection loop** — reads work logs, reviews diffs, runs quality checks, sends sloppy work back
 - **Agent-agnostic** — any AI that takes orders can join the crew
 
 ## Install
@@ -110,20 +111,29 @@ Then gives clear deliverables, quality checks, and boundaries. Stay in your lane
 
 ### 3. Deploy
 
-Agents get sent to their desks (tmux panes) or the back room (background processes):
+Agents get sent to their desks (tmux panes) with full logging and completion signals:
 
 ```bash
-tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO' - ; echo $? > /tmp/report-1"
-tmux split-window -v "cat /tmp/assignment-2.txt | codex exec --full-auto -C '$REPO' - ; echo $? > /tmp/report-2"
+# Agent works in a visible pane, output logged, signals when done
+tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO' - 2>&1 | tee /tmp/worklog-1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-1 ; tmux wait-for -S agent-1-done"
+tmux split-window -v "cat /tmp/assignment-2.txt | codex exec --full-auto -C '$REPO' - 2>&1 | tee /tmp/worklog-2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-2 ; tmux wait-for -S agent-2-done"
 ```
 
-### 4. Monitor & Inspect
+### 4. Wait & Inspect
 
-Claude waits for report files, then inspects everything:
+Claude blocks on `tmux wait-for` — no polling loops. Agents tap the boss when done:
 
-- Checks exit codes (did they crash?)
-- Reviews `git diff` (what did they actually build?)
-- Runs quality checks (does it pass type-check, lint, tests?)
+```bash
+# Blocks until agent signals (instant, no polling)
+tmux wait-for agent-1-done
+tmux wait-for agent-2-done
+```
+
+Then inspects:
+
+- Reads work logs (what did they actually do, any errors, their reasoning?)
+- Reviews `git diff` (what changed?)
+- Runs quality checks (type-check, lint, tests)
 - Sends sloppy work back with correction assignments
 - Signs off on clean work
 
@@ -172,7 +182,6 @@ A: Claude detects conflicts during inspection, resolves them, and re-runs verifi
 
 PRs welcome. Especially:
 - New agent backends (Gemini CLI, Kimi, Cursor, etc.)
-- Smarter completion detection
 - Task dependency graphs (do B after A clocks out)
 - Better tmux layouts for large crews
 
