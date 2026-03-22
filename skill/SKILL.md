@@ -24,7 +24,7 @@ When writing specs for agents, be a no-nonsense boss giving crystal-clear orders
 
 Status updates to the user should feel like a foreman reporting from the floor:
 - Dispatching: "Cracking the whip — 3 agents deployed."
-- Waiting: "Agents are heads-down. I'll check on them shortly."
+- Waiting: "Agents are heads-down. They'll tap me when they're done."
 - Reviewing: "Work's in. Inspecting the deliverables now."
 - Issues found: "Agent 2 cut corners on the tests. Sending it back."
 - All clear: "All work passes inspection. Ready for your sign-off."
@@ -83,12 +83,19 @@ Uses `tee` to pipe output to both the tmux pane (visual) AND a work log file (pe
 ```bash
 TASK_ID=$(date +%s)
 
-# Deploy one agent — visual + logged
-tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-$TASK_ID.txt ; echo \${PIPESTATUS[0]} > /tmp/report-$TASK_ID"
+# Deploy one agent — visual + logged + signals when done
+tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-$TASK_ID.txt ; echo \${PIPESTATUS[0]} > /tmp/report-$TASK_ID ; tmux wait-for -S agent-$TASK_ID-done"
 
-# Deploy a whole crew — each gets their own work log
-tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-task1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-task1"
-tmux split-window -v "cat /tmp/assignment-2.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-task2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-task2"
+# Claude blocks here until the agent taps us on the shoulder
+tmux wait-for agent-$TASK_ID-done
+
+# Deploy a whole crew — each signals their own channel
+tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-task1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-task1 ; tmux wait-for -S agent-task1-done"
+tmux split-window -v "cat /tmp/assignment-2.txt | codex exec --full-auto -C '$REPO_DIR' - 2>&1 | tee /tmp/worklog-task2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-task2 ; tmux wait-for -S agent-task2-done"
+
+# Wait for all agents to report back (run each wait sequentially)
+tmux wait-for agent-task1-done
+tmux wait-for agent-task2-done
 ```
 
 Tell the user: "Agents are at their desks. You can watch them work in the panes."
@@ -97,9 +104,11 @@ Tell the user: "Agents are at their desks. You can watch them work in the panes.
 - Write assignments to temp files and pipe via stdin (`-`) — no garbled orders
 - Always use `2>&1 | tee /tmp/worklog-<id>.txt` — keeps a paper trail even after panes close
 - Use `${PIPESTATUS[0]}` instead of `$?` to capture the agent's exit code, not `tee`'s
+- Always end with `tmux wait-for -S agent-<id>-done` — agent taps the boss on the shoulder when done
+- Claude blocks on `tmux wait-for agent-<id>-done` — no polling, instant notification
 - Do NOT append `; read` — when they're done, they clock out
 - Every assignment starts with the preamble (see below) — no slacking, no questions
-- Every dispatch ends with a report file — proof of completion
+- Every dispatch ends with a report file + signal — proof of completion
 
 ### Mode 2: In the Back Room (background process — no tmux fallback)
 
@@ -184,10 +193,29 @@ Everything must pass. No excuses.
 
 ## Checking on the Crew & Reviewing Work
 
-After dispatching, Claude Code waits for reports, then inspects:
+After dispatching, Claude Code waits for agents to report back, then inspects.
+
+**tmux mode — instant notification (preferred):**
+
+Agents signal via `tmux wait-for -S` when done. Claude blocks on `tmux wait-for` — no polling, no wasted cycles. The agent taps the boss on the shoulder.
 
 ```bash
-# Wait for the agent to clock out (check every 10s, give up after 10 min)
+# Wait for one agent
+tmux wait-for agent-$TASK_ID-done
+EXIT_CODE=$(cat /tmp/report-$TASK_ID)
+echo "Agent clocked out. Exit code: $EXIT_CODE"
+
+# Wait for multiple agents (blocks until all report back)
+tmux wait-for agent-task1-done
+tmux wait-for agent-task2-done
+tmux wait-for agent-task3-done
+echo "All agents clocked out."
+```
+
+**Back room mode — polling fallback (when tmux is unavailable):**
+
+```bash
+# Poll for report file (check every 10s, give up after 10 min)
 TIMEOUT=600; ELAPSED=0
 while [ ! -f /tmp/report-$TASK_ID ] && [ $ELAPSED -lt $TIMEOUT ]; do
   sleep 10; ELAPSED=$((ELAPSED + 10))
@@ -233,7 +261,7 @@ rm -f /tmp/assignment-*.txt /tmp/report-* /tmp/worklog-*
 2. **Plan** — Claude Code breaks the job into independent assignments
 3. **Write assignments** — one clear spec per task, using the template
 4. **Deploy** — send agents to work (panes, back room, or phone)
-5. **Monitor** — wait for reports, check on stragglers
+5. **Wait** — `tmux wait-for` (instant) or poll sentinel files (back room fallback)
 6. **Inspect** — review all deliverables, run quality checks
 7. **Correct** — send sloppy work back with specific feedback
 8. **Sign off** — approve clean work, clean up the floor
@@ -241,20 +269,28 @@ rm -f /tmp/assignment-*.txt /tmp/report-* /tmp/worklog-*
 ## tmux Floor Plan
 
 ```bash
+# Full dispatch command pattern (visual + logged + signal):
+# cat assignment | agent exec ... 2>&1 | tee worklog ; echo ${PIPESTATUS[0]} > report ; tmux wait-for -S signal
+
 # Two desks side-by-side
-tmux split-window -h "cat /tmp/assignment-1.txt | agent exec ... - 2>&1 | tee /tmp/worklog-1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-1"
+tmux split-window -h "cat /tmp/a1.txt | agent ... 2>&1 | tee /tmp/worklog-1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-1 ; tmux wait-for -S agent-1-done"
+tmux split-window -v "cat /tmp/a2.txt | agent ... 2>&1 | tee /tmp/worklog-2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-2 ; tmux wait-for -S agent-2-done"
+
+# Wait for both (blocks, no polling)
+tmux wait-for agent-1-done
+tmux wait-for agent-2-done
 
 # Four desks (2x2 grid)
-tmux split-window -h "cat /tmp/a1.txt | agent ... 2>&1 | tee /tmp/worklog-1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-1"
-tmux split-window -v "cat /tmp/a2.txt | agent ... 2>&1 | tee /tmp/worklog-2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-2"
+tmux split-window -h "cat /tmp/a1.txt | agent ... 2>&1 | tee /tmp/worklog-1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-1 ; tmux wait-for -S agent-1-done"
+tmux split-window -v "cat /tmp/a2.txt | agent ... 2>&1 | tee /tmp/worklog-2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-2 ; tmux wait-for -S agent-2-done"
 tmux select-pane -t 0
-tmux split-window -v "cat /tmp/a3.txt | agent ... 2>&1 | tee /tmp/worklog-3.txt ; echo \${PIPESTATUS[0]} > /tmp/report-3"
+tmux split-window -v "cat /tmp/a3.txt | agent ... 2>&1 | tee /tmp/worklog-3.txt ; echo \${PIPESTATUS[0]} > /tmp/report-3 ; tmux wait-for -S agent-3-done"
+
+# Wait for all (blocks until last agent clocks out)
+tmux wait-for agent-1-done && tmux wait-for agent-2-done && tmux wait-for agent-3-done
 
 # Read an agent's full work log after they clock out (primary intelligence source)
 cat /tmp/worklog-1.txt
-
-# Peek at a pane while agent is still working (if pane hasn't closed yet)
-tmux capture-pane -t 1 -p
 ```
 
 ## Agent-Specific Commands
